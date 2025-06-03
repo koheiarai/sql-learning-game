@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SQL学習ゲーム</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,25 +14,38 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.92);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
             overflow: hidden;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .header {
-            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(33, 203, 243, 0.9));
             color: white;
             padding: 30px;
             text-align: center;
+            backdrop-filter: blur(10px);
         }
 
         .header h1 {
@@ -48,10 +62,11 @@
         }
 
         .score-item {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
             padding: 10px 20px;
             border-radius: 25px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .game-area {
@@ -62,19 +77,21 @@
             text-align: center;
             margin-bottom: 30px;
             padding: 20px;
-            background: linear-gradient(45deg, #f093fb, #f5576c);
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.9), rgba(245, 87, 108, 0.9));
             color: white;
             border-radius: 15px;
             font-size: 1.2em;
+            backdrop-filter: blur(10px);
         }
 
         .question-card {
-            background: #fff;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
             border-left: 5px solid #2196F3;
+            backdrop-filter: blur(5px);
         }
 
         .question-title {
@@ -84,17 +101,18 @@
         }
 
         .table-display {
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.95);
             border-radius: 10px;
             padding: 20px;
             margin: 20px 0;
             overflow-x: auto;
+            backdrop-filter: blur(5px);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            background: rgba(255, 255, 255, 0.98);
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -107,13 +125,13 @@
         }
 
         th {
-            background: #2196F3;
+            background: rgba(33, 150, 243, 0.9);
             color: white;
             font-weight: 600;
         }
 
         tr:hover {
-            background-color: #f5f5f5;
+            background-color: rgba(245, 245, 245, 0.8);
         }
 
         .sql-input {
@@ -124,16 +142,17 @@
             border-radius: 10px;
             font-family: 'Courier New', monospace;
             font-size: 16px;
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.95);
             transition: all 0.3s ease;
             resize: vertical;
+            backdrop-filter: blur(5px);
         }
 
         .sql-input:focus {
             outline: none;
             border-color: #2196F3;
-            background: white;
-            box-shadow: 0 0 10px rgba(33, 150, 243, 0.2);
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 0 15px rgba(33, 150, 243, 0.3);
         }
 
         .button-group {
@@ -153,26 +172,30 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 1px;
+            backdrop-filter: blur(10px);
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(33, 203, 243, 0.9));
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .btn-secondary {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.9), rgba(238, 90, 36, 0.9));
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .btn-success {
-            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(139, 195, 74, 0.9));
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .feedback {
@@ -182,31 +205,35 @@
             font-weight: 600;
             text-align: center;
             font-size: 1.1em;
+            backdrop-filter: blur(10px);
         }
 
         .feedback.correct {
-            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(139, 195, 74, 0.9));
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .feedback.incorrect {
-            background: linear-gradient(45deg, #f44336, #ff5722);
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.9), rgba(255, 87, 34, 0.9));
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .hint {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background: rgba(255, 243, 205, 0.95);
+            border: 1px solid rgba(255, 234, 167, 0.8);
             border-radius: 10px;
             padding: 15px;
             margin-top: 15px;
             color: #856404;
+            backdrop-filter: blur(5px);
         }
 
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e0e0e0;
+            background: rgba(224, 224, 224, 0.7);
             border-radius: 4px;
             overflow: hidden;
             margin: 20px 0;
@@ -214,16 +241,18 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
             transition: width 0.5s ease;
         }
 
         .celebration {
             text-align: center;
             padding: 40px;
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.9), rgba(255, 237, 78, 0.9));
             border-radius: 15px;
             margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .celebration h2 {
@@ -303,6 +332,125 @@
     </div>
 
     <script>
+        // p5.js背景アニメーション
+        let particles = [];
+        let waves = [];
+        let time = 0;
+
+        function setup() {
+            let canvas = createCanvas(windowWidth, windowHeight);
+            canvas.id('bg-canvas');
+            
+            // パーティクルを初期化
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+            
+            // 波を初期化
+            for (let i = 0; i < 3; i++) {
+                waves.push(new Wave(i));
+            }
+        }
+
+        function draw() {
+            // グラデーション背景
+            for (let i = 0; i <= height; i++) {
+                let inter = map(i, 0, height, 0, 1);
+                let c = lerpColor(
+                    color(102, 126, 234), // #667eea
+                    color(118, 75, 162),  // #764ba2
+                    inter
+                );
+                stroke(c);
+                line(0, i, width, i);
+            }
+            
+            // 波のアニメーション
+            waves.forEach(wave => {
+                wave.update();
+                wave.display();
+            });
+            
+            // パーティクルアニメーション
+            particles.forEach(particle => {
+                particle.update();
+                particle.display();
+            });
+            
+            time += 0.01;
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+
+        // パーティクルクラス
+        class Particle {
+            constructor() {
+                this.reset();
+                this.y = random(height);
+            }
+            
+            reset() {
+                this.x = random(-50, width + 50);
+                this.y = random(-50, -10);
+                this.size = random(2, 8);
+                this.speed = random(0.5, 2);
+                this.opacity = random(30, 80);
+                this.color = random(['#ffffff', '#e3f2fd', '#bbdefb', '#90caf9']);
+            }
+            
+            update() {
+                this.y += this.speed;
+                this.x += sin(this.y * 0.01 + time) * 0.5;
+                
+                if (this.y > height + 50) {
+                    this.reset();
+                }
+            }
+            
+            display() {
+                push();
+                fill(red(this.color), green(this.color), blue(this.color), this.opacity);
+                noStroke();
+                ellipse(this.x, this.y, this.size);
+                pop();
+            }
+        }
+
+        // 波クラス
+        class Wave {
+            constructor(index) {
+                this.index = index;
+                this.amplitude = 30 + index * 20;
+                this.frequency = 0.02 + index * 0.01;
+                this.speed = 0.02 + index * 0.01;
+                this.offset = index * 100;
+                this.opacity = 20 - index * 5;
+            }
+            
+            update() {
+                this.offset += this.speed;
+            }
+            
+            display() {
+                push();
+                stroke(255, 255, 255, this.opacity);
+                strokeWeight(2);
+                noFill();
+                
+                beginShape();
+                for (let x = -50; x <= width + 50; x += 5) {
+                    let y = height/2 + sin(x * this.frequency + this.offset) * this.amplitude + 
+                           sin(x * this.frequency * 2 + this.offset * 1.5) * (this.amplitude * 0.5);
+                    vertex(x, y);
+                }
+                endShape();
+                pop();
+            }
+        }
+
+        // ゲームロジック（元のコードと同じ）
         let currentQuestion = 0;
         let score = 0;
         let streak = 0;
@@ -510,10 +658,10 @@
 
         function normalizeSQL(sql) {
             return sql.toLowerCase()
-                      .replace(/'/g, "'")  // 全角シングルクォートを半角に変換
-                      .replace(/"/g, "'")  // ダブルクォートをシングルクォートに変換
-                      .replace(/"/g, "'")  // 全角ダブルクォートもシングルクォートに変換
-                      .replace(/'/g, "'")  // 全角シングルクォートも変換
+                      .replace(/'/g, "'")
+                      .replace(/"/g, "'")
+                      .replace(/"/g, "'")
+                      .replace(/'/g, "'")
                       .replace(/\s+/g, ' ')
                       .replace(/\s*,\s*/g, ',')
                       .replace(/\s*=\s*/g, '=')
@@ -622,8 +770,10 @@
         }
 
         // ゲーム開始
-        displayQuestion();
-        updateScore();
+        window.addEventListener('load', () => {
+            displayQuestion();
+            updateScore();
+        });
     </script>
 </body>
 </html>
