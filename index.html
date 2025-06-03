@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL学習ゲーム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .score-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-area {
+            padding: 40px;
+        }
+
+        .level-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+            border-radius: 15px;
+            font-size: 1.2em;
+        }
+
+        .question-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #2196F3;
+        }
+
+        .question-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .table-display {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #2196F3;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .sql-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+
+        .sql-input:focus {
+            outline: none;
+            border-color: #2196F3;
+            background: white;
+            box-shadow: 0 0 10px rgba(33, 150, 243, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .feedback.correct {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .feedback.incorrect {
+            background: linear-gradient(45deg, #f44336, #ff5722);
+            color: white;
+        }
+
+        .hint {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #856404;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            transition: width 0.5s ease;
+        }
+
+        .celebration {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .celebration h2 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .bounce {
+            animation: bounce 1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 SQL学習ゲーム</h1>
+            <div class="score-board">
+                <div class="score-item">
+                    <span>レベル: <span id="current-level">1</span></span>
+                </div>
+                <div class="score-item">
+                    <span>スコア: <span id="score">0</span></span>
+                </div>
+                <div class="score-item">
+                    <span>連続正解: <span id="streak">0</span></span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="level-info" id="level-info">
+                レベル1: 基本のSELECT文
+            </div>
+
+            <div class="question-card">
+                <div class="question-title" id="question-title">
+                    問題1: 全ての商品を表示してください
+                </div>
+                <div class="table-display" id="table-display">
+                    <!-- テーブルがここに表示されます -->
+                </div>
+                <div id="question-description">
+                    products テーブルから全ての商品情報を取得してください。
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <label for="sql-query" style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                        SQL文を入力してください:
+                    </label>
+                    <textarea 
+                        id="sql-query" 
+                        class="sql-input" 
+                        placeholder="SELECT ..."
+                    ></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="checkAnswer()">実行</button>
+                    <button class="btn btn-secondary" onclick="showHint()">ヒント</button>
+                    <button class="btn btn-success" onclick="nextQuestion()" id="next-btn" style="display: none;">次の問題</button>
+                </div>
+
+                <div id="feedback" class="feedback" style="display: none;"></div>
+                <div id="hint" class="hint" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let streak = 0;
+        let currentLevel = 1;
+
+        const questions = [
+            // レベル1: 基本のSELECT
+            {
+                level: 1,
+                title: "問題1: 全ての商品を表示",
+                description: "products テーブルから全ての商品情報を取得してください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"]
+                    ]
+                },
+                answer: "SELECT * FROM products",
+                hint: "全ての列を取得するには * を使用します。"
+            },
+            {
+                level: 1,
+                title: "問題2: 特定の列を選択",
+                description: "products テーブルから商品名(name)と価格(price)のみを取得してください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"]
+                    ]
+                },
+                answer: "SELECT name, price FROM products",
+                hint: "必要な列名をカンマで区切って指定します。"
+            },
+            // レベル2: WHERE句
+            {
+                level: 2,
+                title: "問題3: 条件を指定して検索",
+                description: "products テーブルから価格が5000円以上の商品を取得してください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"],
+                        [5, "タブレット", 45000, "電子機器"]
+                    ]
+                },
+                answer: "SELECT * FROM products WHERE price >= 5000",
+                hint: "WHERE句を使って条件を指定します。価格の比較には >= を使用します。"
+            },
+            {
+                level: 2,
+                title: "問題4: 文字列の条件検索",
+                description: "products テーブルからカテゴリが「電子機器」の商品を取得してください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"],
+                        [5, "タブレット", 45000, "電子機器"]
+                    ]
+                },
+                answer: "SELECT * FROM products WHERE category = '電子機器'",
+                hint: "文字列の比較では等号(=)を使い、文字列をシングルクォートで囲みます。"
+            },
+            // レベル3: ORDER BY
+            {
+                level: 3,
+                title: "問題5: データを並び替え",
+                description: "products テーブルの商品を価格の安い順に並べて取得してください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"],
+                        [5, "タブレット", 45000, "電子機器"]
+                    ]
+                },
+                answer: "SELECT * FROM products ORDER BY price ASC",
+                hint: "ORDER BY句を使ってソートします。昇順はASC、降順はDESCです。"
+            },
+            {
+                level: 3,
+                title: "問題6: 複合条件とソート",
+                description: "電子機器カテゴリの商品を価格の高い順に並べて取得してください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"],
+                        [5, "タブレット", 45000, "電子機器"]
+                    ]
+                },
+                answer: "SELECT * FROM products WHERE category = '電子機器' ORDER BY price DESC",
+                hint: "WHERE句とORDER BY句を組み合わせます。高い順はDESCです。"
+            },
+            // レベル4: 集計関数
+            {
+                level: 4,
+                title: "問題7: データの集計",
+                description: "products テーブルの商品数を数えてください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"],
+                        [5, "タブレット", 45000, "電子機器"]
+                    ]
+                },
+                answer: "SELECT COUNT(*) FROM products",
+                hint: "COUNT(*)を使って行数を数えます。"
+            },
+            {
+                level: 4,
+                title: "問題8: 最大値を求める",
+                description: "products テーブルで最も高い商品の価格を求めてください。",
+                table: {
+                    name: "products",
+                    columns: ["id", "name", "price", "category"],
+                    data: [
+                        [1, "ノートPC", 98000, "電子機器"],
+                        [2, "マウス", 2500, "電子機器"],
+                        [3, "本", 1200, "書籍"],
+                        [4, "ペン", 150, "文房具"],
+                        [5, "タブレット", 45000, "電子機器"]
+                    ]
+                },
+                answer: "SELECT MAX(price) FROM products",
+                hint: "MAX()関数を使って最大値を求めます。"
+            }
+        ];
+
+        function displayQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('current-level').textContent = question.level;
+            document.getElementById('level-info').textContent = `レベル${question.level}: ${getLevelDescription(question.level)}`;
+            document.getElementById('question-title').textContent = question.title;
+            document.getElementById('question-description').textContent = question.description;
+            
+            displayTable(question.table);
+            document.getElementById('sql-query').value = '';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('hint').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            
+            updateProgress();
+            
+            if (question.level > currentLevel) {
+                currentLevel = question.level;
+                showLevelUp();
+            }
+        }
+
+        function getLevelDescription(level) {
+            const descriptions = {
+                1: "基本のSELECT文",
+                2: "WHERE句での条件指定",
+                3: "ORDER BYでのソート",
+                4: "集計関数の使用"
+            };
+            return descriptions[level] || "高度なSQL";
+        }
+
+        function displayTable(table) {
+            let html = `<h4>${table.name} テーブル</h4><table><thead><tr>`;
+            
+            table.columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+            
+            table.data.forEach(row => {
+                html += '<tr>';
+                row.forEach(cell => {
+                    html += `<td>${cell}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('table-display').innerHTML = html;
+        }
+
+        function normalizeSQL(sql) {
+            return sql.toLowerCase()
+                      .replace(/'/g, "'")  // 全角シングルクォートを半角に変換
+                      .replace(/"/g, "'")  // ダブルクォートをシングルクォートに変換
+                      .replace(/"/g, "'")  // 全角ダブルクォートもシングルクォートに変換
+                      .replace(/'/g, "'")  // 全角シングルクォートも変換
+                      .replace(/\s+/g, ' ')
+                      .replace(/\s*,\s*/g, ',')
+                      .replace(/\s*=\s*/g, '=')
+                      .replace(/\s*>=\s*/g, '>=')
+                      .replace(/\s*<=\s*/g, '<=')
+                      .trim();
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById('sql-query').value.trim();
+            const correctAnswer = questions[currentQuestion].answer;
+            
+            if (!userAnswer) {
+                showFeedback('SQL文を入力してください。', false);
+                return;
+            }
+            
+            const normalizedUser = normalizeSQL(userAnswer);
+            const normalizedCorrect = normalizeSQL(correctAnswer);
+            
+            if (normalizedUser === normalizedCorrect) {
+                const questionLevel = questions[currentQuestion].level;
+                score += 10 * questionLevel;
+                streak++;
+                updateScore();
+                showFeedback('正解です！🎉', true);
+                document.getElementById('next-btn').style.display = 'inline-block';
+            } else {
+                streak = 0;
+                updateScore();
+                showFeedback(`不正解です。正解は: ${correctAnswer}`, false);
+            }
+        }
+
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.style.display = 'block';
+            
+            if (isCorrect) {
+                feedback.classList.add('bounce');
+                setTimeout(() => feedback.classList.remove('bounce'), 1000);
+            }
+        }
+
+        function showHint() {
+            const hint = document.getElementById('hint');
+            hint.textContent = questions[currentQuestion].hint;
+            hint.style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion >= questions.length) {
+                showGameComplete();
+                return;
+            }
+            displayQuestion();
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('streak').textContent = streak;
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+
+        function showLevelUp() {
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration';
+            celebration.innerHTML = `
+                <h2>🎊 レベルアップ！ 🎊</h2>
+                <p>レベル ${currentLevel} に到達しました！</p>
+            `;
+            
+            document.querySelector('.game-area').insertBefore(celebration, document.querySelector('.question-card'));
+            
+            setTimeout(() => {
+                celebration.remove();
+            }, 3000);
+        }
+
+        function showGameComplete() {
+            document.querySelector('.game-area').innerHTML = `
+                <div class="celebration">
+                    <h2>🏆 ゲームクリア！ 🏆</h2>
+                    <p>おめでとうございます！</p>
+                    <p>最終スコア: ${score}点</p>
+                    <p>SQLの基礎をマスターしました！</p>
+                    <button class="btn btn-primary" onclick="restartGame()">もう一度プレイ</button>
+                </div>
+            `;
+        }
+
+        function restartGame() {
+            currentQuestion = 0;
+            score = 0;
+            streak = 0;
+            currentLevel = 1;
+            updateScore();
+            displayQuestion();
+        }
+
+        // ゲーム開始
+        displayQuestion();
+        updateScore();
+    </script>
+</body>
+</html>
